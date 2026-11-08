@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Figure Template: Academic Diagram & Model</title>
+  <style>
+    :root {
+      --font-serif: "Times New Roman", "DFKai-SB", "BiauKai", "標楷體", "KaiTi", "Cambria", serif;
+      --font-kai: "DFKai-SB", "BiauKai", "標楷體", "KaiTi", "STKaiti", "TW-Kai", serif;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      --border-dark: #111111;
+      --text-main: #111111;
+      --text-sub: #374151;
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --primary: #2563eb;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      font-family: var(--font-serif);
+      line-height: 1.5;
+      padding: 36px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1180px;
+      background: var(--bg-card);
+      padding: 36px 44px;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+      border: 1px solid #e2e8f0;
+    }
+
+    /* 頂部操作工具列 */
+    .toolbar {
+      font-family: var(--font-sans);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px dashed #cbd5e1;
+    }
+
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .toolbar-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      margin-right: 4px;
+    }
+
+    .btn {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #334155;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .btn:hover { background: #f1f5f9; border-color: #94a3b8; }
+    .btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+      font-weight: 500;
+    }
+
+    .btn-action {
+      background: #f8fafc;
+      font-weight: 500;
+    }
+
+    .btn-highlight {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #1d4ed8;
+      font-weight: 600;
+    }
+
+    .edit-hint-pill {
+      font-size: 12px;
+      color: #0284c7;
+      background: #e0f2fe;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-weight: 500;
+    }
+
+    /* 雙擊文字即時編輯樣式 */
+    .editable-text {
+      cursor: pointer;
+      transition: background-color 0.15s ease, outline 0.15s ease;
+      border-radius: 3px;
+      padding: 0 2px;
+    }
+
+    .editable-text:hover {
+      outline: 1.5px dashed #3b82f6;
+      background-color: rgba(239, 246, 255, 0.85);
+    }
+
+    .inline-edit-input {
+      width: 95%;
+      border: 1.5px solid #2563eb;
+      border-radius: 3px;
+      padding: 2px 4px;
+      background: #ffffff;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+      color: #111111;
+      box-sizing: border-box;
+    }
+
+    /* 標題 */
+    .caption-block { margin-bottom: 20px; text-align: left; }
+    .caption-title { font-size: 16.5px; font-weight: 700; margin-bottom: 4px; }
+    .caption-desc { font-size: 15px; }
+
+    /* 圖形畫布容器 */
+    .diagram-stage {
+      position: relative;
+      width: 1000px;
+      height: 440px;
+      margin: 16px auto 24px auto;
+      background: #ffffff;
+    }
+
+    /* 底層純向量連接線 (禁止放 text) */
+    .figure-svg-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* 上層節點卡片 (HTML DOM) */
+    .model-box {
+      position: absolute;
+      border: 1.4px solid #111111;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 6px 8px;
+      box-sizing: border-box;
+      z-index: 2;
+    }
+
+    .en-line {
+      font-family: "Times New Roman", serif;
+      color: #111111;
+      line-height: 1.25;
+    }
+
+    .zh-line {
+      font-family: var(--font-kai);
+      color: var(--text-sub);
+      line-height: 1.25;
+      margin-top: 2px;
+    }
+
+    /* 圖末附註 */
+    .figure-note-block {
+      margin-top: 20px;
+      padding-top: 12px;
+      border-top: 0.8pt solid #111111;
+      font-size: 13.5px;
+      line-height: 1.55;
+    }
+
+    .note-zh { font-family: var(--font-kai); color: var(--text-sub); margin-top: 4px; }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: rgba(17, 24, 39, 0.92);
+      color: #ffffff;
+      padding: 10px 20px;
+      border-radius: 24px;
+      font-size: 13.5px;
+      font-family: var(--font-sans);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+      opacity: 0;
+      transition: all 0.25s ease;
+      pointer-events: none;
+      z-index: 1000;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body class="layout-smart">
+
+  <div class="container">
+    <div class="toolbar">
+      <div class="btn-group">
+        <span class="toolbar-label">排版模式：</span>
+        <button class="btn active" onclick="setLayout('smart', this)">智慧排版 (長文字換行)</button>
+        <button class="btn" onclick="setLayout('stacked', this)">中文全部置於下方</button>
+        <button class="btn" onclick="setLayout('inline', this)">中文全部同行接續</button>
+        <button class="btn" onclick="setLayout('en', this)">純英文 (EN)</button>
+        <button class="btn" onclick="setLayout('zh', this)">純中文 (繁中)</button>
+      </div>
+      <div class="btn-group">
+        <span class="edit-hint-pill">💡 雙擊任何文字可輸入修改</span>
+        <button class="btn btn-action btn-highlight" onclick="copyChartAsImage()">📷 複製為圖片 (PNG)</button>
+        <button class="btn btn-action" onclick="downloadChartImage()">💾 另存圖片</button>
+        <button class="btn btn-action" onclick="resetToDefaults()">↺ 重設文字</button>
+      </div>
+    </div>
+
+    <!-- 標題 -->
+    <div class="caption-block">
+      <div class="caption-title">
+        <span class="en-text editable-text" data-key="cap_title_en">Figure 1</span>
+        <span class="zh-text zh-inline editable-text" data-key="cap_title_zh">圖 1</span>
+      </div>
+      <div class="caption-desc">
+        <div class="en-text editable-text" data-key="cap_desc_en">Sample model diagram.</div>
+        <div class="zh-text zh-block editable-text" data-key="cap_desc_zh">範例模型圖。</div>
+      </div>
+    </div>
+
+    <!-- 畫布區域 (DOM 卡片 + 底層純向量箭頭線) -->
+    <div class="diagram-stage" id="diagram-stage">
+      <svg class="figure-svg-layer">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#111111" />
+          </marker>
+        </defs>
+        <line x1="220" y1="100" x2="380" y2="100" stroke="#111" stroke-width="1.4" marker-end="url(#arrow)" />
+      </svg>
+
+      <!-- 節點 (DOM) -->
+      <div class="model-box" style="left: 20px; top: 60px; width: 200px; height: 80px;">
+        <div class="en-line editable-text" data-key="box1_en">Independent Variable</div>
+        <div class="zh-line editable-text" data-key="box1_zh">自變數</div>
+      </div>
+
+      <div class="model-box" style="left: 380px; top: 60px; width: 200px; height: 80px;">
+        <div class="en-line editable-text" data-key="box2_en">Dependent Variable</div>
+        <div class="zh-line editable-text" data-key="box2_zh">依變數</div>
+      </div>
+    </div>
+
+    <!-- 附註 -->
+    <div class="figure-note-block">
+      <p class="note-en editable-text" data-key="note_en"><strong>Note.</strong> Solid lines represent statistically significant paths.</p>
+      <p class="note-zh editable-text" data-key="note_zh"><strong>註：</strong>實線表示統計顯著之路徑。</p>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    function setLayout(mode, btn) {
+      document.body.className = 'layout-' + mode;
+      document.querySelectorAll('.btn-group .btn').forEach(b => {
+        if (!b.classList.contains('btn-action')) b.classList.remove('active');
+      });
+      if (btn) btn.classList.add('active');
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2400);
+    }
+
+    // 動態文字抓取
+    function getElementText(key, defaultVal) {
+      const el = document.querySelector(`[data-key="${key}"]`);
+      if (!el) return defaultVal;
+      return el.innerText.trim() || defaultVal;
+    }
+
+    // 雙擊編輯核心
+    function initDoubleTapEdit() {
+      loadSavedEdits();
+      document.querySelectorAll('.editable-text').forEach(el => {
+        el.setAttribute('title', '雙擊可直接編輯此文字');
+        el.addEventListener('dblclick', function(e) {
+          e.stopPropagation();
+          startEditing(this);
+        });
+      });
+    }
+
+    function startEditing(el) {
+      if (el.querySelector('input, textarea')) return;
+      const key = el.getAttribute('data-key');
+      const originalText = el.innerText.trim();
+      const isMultiLine = originalText.length > 40;
+      const input = document.createElement(isMultiLine ? 'textarea' : 'input');
+      input.className = 'inline-edit-input';
+      input.value = originalText;
+
+      const style = window.getComputedStyle(el);
+      input.style.fontSize = style.fontSize;
+      input.style.fontFamily = style.fontFamily;
+      input.style.textAlign = style.textAlign || 'center';
+
+      el.innerHTML = '';
+      el.appendChild(input);
+      input.focus();
+      input.select();
+
+      let isFinished = false;
+      function commit() {
+        if (isFinished) return;
+        isFinished = true;
+        const val = input.value.trim() || originalText;
+        el.textContent = val;
+        saveEdit(key, val);
+        showToast('✓ 已儲存修改！「複製為圖片」與「另存圖片」將自動同步更新');
+      }
+
+      input.addEventListener('blur', commit);
+      input.addEventListener('keydown', function(evt) {
+        if (evt.key === 'Enter' && !isMultiLine) {
+          evt.preventDefault();
+          commit();
+        } else if (evt.key === 'Enter' && evt.ctrlKey && isMultiLine) {
+          evt.preventDefault();
+          commit();
+        } else if (evt.key === 'Escape') {
+          isFinished = true;
+          el.textContent = originalText;
+        }
+      });
+    }
+
+    function saveEdit(key, val) {
+      if (!key) return;
+      try {
+        const edits = JSON.parse(localStorage.getItem('fig_user_edits') || '{}');
+        edits[key] = val;
+        localStorage.setItem('fig_user_edits', JSON.stringify(edits));
+      } catch (e) {}
+    }
+
+    function loadSavedEdits() {
+      try {
+        const edits = JSON.parse(localStorage.getItem('fig_user_edits') || '{}');
+        Object.keys(edits).forEach(key => {
+          const el = document.querySelector(`[data-key="${key}"]`);
+          if (el && edits[key]) el.textContent = edits[key];
+        });
+      } catch (e) {}
+    }
+
+    function resetToDefaults() {
+      if (!confirm('確定要清除所有文字修改，恢復為預設的論文原文翻譯嗎？')) return;
+      localStorage.removeItem('fig_user_edits');
+      location.reload();
+    }
+
+    // 專屬 Canvas 2D 繪製引擎 (避免 html2canvas 導致的 SVG 渲染 bug)
+    function renderDiagramToCanvas() {
+      const scale = 2.5;
+      const width = 1000;
+      const height = 440;
+      const canvas = document.createElement('canvas');
+      canvas.width = width * scale;
+      canvas.height = height * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(scale, scale);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+
+      // 箭頭
+      ctx.strokeStyle = '#111111';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(220, 100);
+      ctx.lineTo(380, 100);
+      ctx.stroke();
+
+      // 方塊 1
+      drawBox(ctx, 20, 60, 200, 80, [
+        { text: getElementText('box1_en', 'Independent Variable'), font: 'en' },
+        { text: getElementText('box1_zh', '自變數'), font: 'kai' }
+      ]);
+
+      // 方塊 2
+      drawBox(ctx, 380, 60, 200, 80, [
+        { text: getElementText('box2_en', 'Dependent Variable'), font: 'en' },
+        { text: getElementText('box2_zh', '依變數'), font: 'kai' }
+      ]);
+
+      return canvas;
+    }
+
+    function drawBox(ctx, x, y, w, h, lines) {
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = '#111111';
+      ctx.lineWidth = 1.4;
+      ctx.fillRect(x, y, w, h);
+      ctx.strokeRect(x, y, w, h);
+
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      let startY = y + h / 2 - (lines.length * 16) / 2 + 8;
+      lines.forEach(l => {
+        if (l.font === 'kai') {
+          ctx.font = '12.5px "DFKai-SB", "BiauKai", "標楷體", serif';
+          ctx.fillStyle = '#374151';
+        } else {
+          ctx.font = '13.5px "Times New Roman", serif';
+          ctx.fillStyle = '#111111';
+        }
+        ctx.fillText(l.text, x + w / 2, startY);
+        startY += 16;
+      });
+    }
+
+    async function copyChartAsImage() {
+      showToast('⏳ 正在生成高解析度圖片...');
+      try {
+        const canvas = renderDiagramToCanvas();
+        canvas.toBlob(async (blob) => {
+          if (!blob) throw new Error('Blob failed');
+          try {
+            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+            showToast('✓ 圖形已成功複製為圖片！可於 Word、PPT 或 LINE 按 Ctrl+V 貼上');
+          } catch (err) {
+            downloadCanvas(canvas);
+            showToast('✓ 因剪貼簿安全限制，已自動為您下載高畫質 PNG 圖片！');
+          }
+        }, 'image/png');
+      } catch (err) {
+        showToast('複製失敗，請使用另存圖片');
+      }
+    }
+
+    function downloadChartImage() {
+      showToast('⏳ 正在準備下載...');
+      try {
+        const canvas = renderDiagramToCanvas();
+        downloadCanvas(canvas);
+        showToast('✓ 圖形圖片下載成功！');
+      } catch (err) {
+        showToast('下載失敗');
+      }
+    }
+
+    function downloadCanvas(canvas) {
+      const link = document.createElement('a');
+      link.download = 'academic_diagram.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    document.addEventListener('DOMContentLoaded', initDoubleTapEdit);
+  </script>
+</body>
+</html>
