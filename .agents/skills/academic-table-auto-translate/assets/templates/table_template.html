@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Table Template: Academic Three-Line Table</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    :root {
+      --font-serif: "Times New Roman", "DFKai-SB", "BiauKai", "標楷體", "KaiTi", "Cambria", serif;
+      --font-kai: "DFKai-SB", "BiauKai", "標楷體", "KaiTi", "STKaiti", "TW-Kai", serif;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      --border-dark: #111111;
+      --text-main: #111111;
+      --text-sub: #374151;
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --primary: #2563eb;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      font-family: var(--font-serif);
+      line-height: 1.5;
+      padding: 36px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1060px;
+      background: var(--bg-card);
+      padding: 36px 44px;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+      border: 1px solid #e2e8f0;
+    }
+
+    /* 頂部操作工具列 */
+    .toolbar {
+      font-family: var(--font-sans);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px dashed #cbd5e1;
+    }
+
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    button {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+      color: #334155;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+
+    button:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+    }
+
+    button.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+      font-weight: 500;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+      font-weight: 500;
+    }
+
+    .btn-primary:hover {
+      background: #1d4ed8;
+      border-color: #1d4ed8;
+    }
+
+    .tip-capsule {
+      font-size: 12px;
+      color: #0369a1;
+      background: #e0f2fe;
+      border: 1px solid #bae6fd;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* 表格輸出容器 (供截圖使用) */
+    .table-render-area {
+      background: #ffffff;
+      padding: 24px 20px;
+      border-radius: 4px;
+    }
+
+    /* 表格標題 */
+    .table-caption {
+      font-size: 15px;
+      font-weight: bold;
+      text-align: left;
+      margin-bottom: 12px;
+      color: var(--text-main);
+    }
+
+    /* 學術三線表核心樣式 (Booktabs Style) */
+    .academic-table {
+      width: 100%;
+      border-collapse: collapse;
+      border-spacing: 0;
+      border-top: 2.2px solid var(--border-dark);
+      border-bottom: 2.2px solid var(--border-dark);
+      font-size: 14px;
+      margin: 8px 0 16px 0;
+    }
+
+    .academic-table th,
+    .academic-table td {
+      padding: 9px 12px;
+      text-align: center;
+      vertical-align: middle;
+      border: none;
+    }
+
+    /* 首欄與特定欄位靠左對齊 */
+    .academic-table th.col-left,
+    .academic-table td.col-left {
+      text-align: left;
+    }
+
+    /* 數值欄位靠右或置中 */
+    .academic-table th.col-num,
+    .academic-table td.col-num {
+      text-align: right;
+      font-family: "Times New Roman", serif;
+    }
+
+    .academic-table thead tr:last-child th {
+      border-bottom: 1.2px solid var(--border-dark);
+      font-weight: 600;
+    }
+
+    .academic-table tbody tr.section-divider td {
+      border-bottom: 0.8px solid #cbd5e1;
+    }
+
+    /* 雙語雙層字體微調 */
+    .zh-text {
+      font-family: var(--font-kai);
+      color: var(--text-sub);
+    }
+
+    .en-text {
+      font-family: "Times New Roman", serif;
+      font-weight: normal;
+    }
+
+    /* 智慧排版狀態控制 */
+    /* 1. 預設智慧排版：短詞同行、長句換行 */
+    body.mode-smart .zh-block { display: block; margin-top: 2px; }
+    body.mode-smart .zh-inline { display: inline; margin-left: 6px; }
+
+    /* 2. 置於下方：中文一律換至下方 */
+    body.mode-below .zh-block,
+    body.mode-below .zh-inline { display: block; margin-top: 3px; }
+
+    /* 3. 同行接續：中文一律接在英文後 */
+    body.mode-inline .zh-block,
+    body.mode-inline .zh-inline { display: inline; margin-left: 6px; }
+
+    /* 4. 純英文 */
+    body.mode-en .zh-text { display: none !important; }
+
+    /* 5. 純中文 */
+    body.mode-zh .en-text { display: none !important; }
+
+    /* 表末附註 (Note) */
+    .table-note {
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: #374151;
+      margin-top: 8px;
+      text-align: left;
+    }
+
+    .table-note .note-title {
+      font-style: italic;
+      font-weight: 600;
+      color: #111111;
+    }
+
+    /* 雙擊編輯樣式 */
+    .editable-text {
+      cursor: pointer;
+      transition: background-color 0.15s ease, outline 0.15s ease;
+      border-radius: 3px;
+      padding: 1px 3px;
+    }
+
+    .editable-text:hover {
+      outline: 1.5px dashed #3b82f6;
+      background-color: rgba(239, 246, 255, 0.85);
+    }
+
+    .inline-edit-input {
+      width: 95%;
+      border: 1.5px solid #2563eb;
+      border-radius: 3px;
+      padding: 2px 4px;
+      background: #ffffff;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+      color: #111111;
+      font-size: inherit;
+      font-family: inherit;
+    }
+
+    /* 提示吐司訊息 */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(17, 24, 39, 0.92);
+      color: #ffffff;
+      padding: 10px 22px;
+      border-radius: 9999px;
+      font-size: 13.5px;
+      font-family: var(--font-sans);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+      z-index: 1000;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+    }
+
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body class="mode-smart">
+  <div class="container">
+    <!-- 頂部工具列 -->
+    <div class="toolbar">
+      <div class="btn-group">
+        <button class="active" onclick="setLayoutMode('smart', this)">智慧排版</button>
+        <button onclick="setLayoutMode('below', this)">置於下方</button>
+        <button onclick="setLayoutMode('inline', this)">同行接續</button>
+        <button onclick="setLayoutMode('en', this)">純英文</button>
+        <button onclick="setLayoutMode('zh', this)">純中文</button>
+      </div>
+
+      <div class="btn-group">
+        <div class="tip-capsule">💡 雙擊任何文字可輸入修改</div>
+        <button class="btn-primary" onclick="copyTableAsImage()">📷 複製為圖片 (PNG)</button>
+        <button onclick="downloadTableImage()">💾 另存圖片</button>
+        <button onclick="resetToDefaults('academic_table_edits')">↺ 重設文字</button>
+      </div>
+    </div>
+
+    <!-- 表格主要渲染區塊 -->
+    <div class="table-render-area" id="table-capture-area">
+      <div class="table-caption">
+        <span class="en-text editable-text" data-key="table_title_en">Table 1 Descriptive Statistics and Correlations</span>
+        <span class="zh-text zh-inline editable-text" data-key="table_title_zh">表 1 敘述統計與相關分析</span>
+      </div>
+
+      <table class="academic-table">
+        <thead>
+          <tr>
+            <th class="col-left">
+              <span class="en-text editable-text" data-key="th_var_en">Variable</span>
+              <span class="zh-text zh-block editable-text" data-key="th_var_zh">變項</span>
+            </th>
+            <th class="col-num">
+              <span class="en-text editable-text" data-key="th_m_en"><em>M</em></span>
+              <span class="zh-text zh-inline editable-text" data-key="th_m_zh">(平均數)</span>
+            </th>
+            <th class="col-num">
+              <span class="en-text editable-text" data-key="th_sd_en"><em>SD</em></span>
+              <span class="zh-text zh-inline editable-text" data-key="th_sd_zh">(標準差)</span>
+            </th>
+            <th class="col-num">
+              <span class="en-text editable-text" data-key="th_c1_en">1</span>
+            </th>
+            <th class="col-num">
+              <span class="en-text editable-text" data-key="th_c2_en">2</span>
+            </th>
+            <th class="col-num">
+              <span class="en-text editable-text" data-key="th_c3_en">3</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="col-left">
+              <span class="en-text editable-text" data-key="row1_en">1. In-Degree Centrality</span>
+              <span class="zh-text zh-block editable-text" data-key="row1_zh">入度中心性</span>
+            </td>
+            <td class="col-num"><span class="editable-text" data-key="r1_m">4.18</span></td>
+            <td class="col-num"><span class="editable-text" data-key="r1_sd">1.32</span></td>
+            <td class="col-num"><span class="editable-text" data-key="r1_c1">–</span></td>
+            <td class="col-num"><span class="editable-text" data-key="r1_c2">.42**</span></td>
+            <td class="col-num"><span class="editable-text" data-key="r1_c3">.36*</span></td>
+          </tr>
+          <tr>
+            <td class="col-left">
+              <span class="en-text editable-text" data-key="row2_en">2. Betweenness Centrality</span>
+              <span class="zh-text zh-block editable-text" data-key="row2_zh">中介中心性</span>
+            </td>
+            <td class="col-num"><span class="editable-text" data-key="r2_m">12.56</span></td>
+            <td class="col-num"><span class="editable-text" data-key="r2_sd">5.74</span></td>
+            <td class="col-num"><span class="editable-text" data-key="r2_c1">.42**</span></td>
+            <td class="col-num"><span class="editable-text" data-key="r2_c2">–</span></td>
+            <td class="col-num"><span class="editable-text" data-key="r2_c3">.51**</span></td>
+          </tr>
+          <tr>
+            <td class="col-left">
+              <span class="en-text editable-text" data-key="row3_en">3. Academic Performance</span>
+              <span class="zh-text zh-block editable-text" data-key="row3_zh">學習成效</span>
+            </td>
+            <td class="col-num"><span class="editable-text" data-key="r3_m">82.40</span></td>
+            <td class="col-num"><span class="editable-text" data-key="r3_sd">9.15</span></td>
+            <td class="col-num"><span class="editable-text" data-key="r3_c1">.36*</span></td>
+            <td class="col-num"><span class="editable-text" data-key="r3_c2">.51**</span></td>
+            <td class="col-num"><span class="editable-text" data-key="r3_c3">–</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- 表末附註 -->
+      <div class="table-note">
+        <span class="note-title">Note.</span>
+        <span class="en-text editable-text" data-key="note_en"><em>N</em> = 156. * <em>p</em> &lt; .05, ** <em>p</em> &lt; .01 (two-tailed).</span>
+        <span class="zh-text zh-block editable-text" data-key="note_zh">附註：樣本數 <em>N</em> = 156。* <em>p</em> &lt; .05，** <em>p</em> &lt; .01（雙尾檢定）。</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const STORAGE_KEY = 'academic_table_edits';
+
+    // 排版模式切換
+    function setLayoutMode(mode, btn) {
+      document.body.className = `mode-${mode}`;
+      document.querySelectorAll('.toolbar .btn-group button').forEach(b => {
+        if (['smart', 'below', 'inline', 'en', 'zh'].some(m => b.getAttribute('onclick')?.includes(m))) {
+          b.classList.remove('active');
+        }
+      });
+      if (btn) btn.classList.add('active');
+      showToast(`已切換為：${btn.innerText}`);
+    }
+
+    // 吐司提示
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2600);
+    }
+
+    // 雙擊編輯功能
+    function initDoubleTapEdit() {
+      loadSavedEdits();
+      document.querySelectorAll('.editable-text').forEach(el => {
+        el.setAttribute('title', '雙擊可直接編輯此文字');
+        el.addEventListener('dblclick', function(e) {
+          e.stopPropagation();
+          startEditing(this);
+        });
+      });
+    }
+
+    function startEditing(el) {
+      if (el.querySelector('input, textarea')) return;
+      const key = el.getAttribute('data-key');
+      const originalText = el.innerText.trim();
+
+      const isMultiLine = originalText.length > 40;
+      const input = document.createElement(isMultiLine ? 'textarea' : 'input');
+      input.className = 'inline-edit-input';
+      input.value = originalText;
+
+      const style = window.getComputedStyle(el);
+      input.style.fontSize = style.fontSize;
+      input.style.fontFamily = style.fontFamily;
+      input.style.textAlign = style.textAlign || 'inherit';
+      if (isMultiLine) {
+        input.style.minHeight = '50px';
+        input.style.resize = 'vertical';
+      }
+
+      el.innerHTML = '';
+      el.appendChild(input);
+      input.focus();
+      input.select();
+
+      let isFinished = false;
+      function commit() {
+        if (isFinished) return;
+        isFinished = true;
+        const val = input.value.trim() || originalText;
+        el.textContent = val;
+        saveEdit(key, val);
+        showToast('✓ 已儲存修改！匯出圖片將即時同步更新');
+      }
+
+      input.addEventListener('blur', commit);
+      input.addEventListener('keydown', function(evt) {
+        if (evt.key === 'Enter' && !isMultiLine) {
+          evt.preventDefault();
+          commit();
+        } else if (evt.key === 'Enter' && evt.ctrlKey && isMultiLine) {
+          evt.preventDefault();
+          commit();
+        } else if (evt.key === 'Escape') {
+          isFinished = true;
+          el.textContent = originalText;
+        }
+      });
+    }
+
+    function saveEdit(key, val) {
+      if (!key) return;
+      try {
+        const edits = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        edits[key] = val;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(edits));
+      } catch (e) { console.warn(e); }
+    }
+
+    function loadSavedEdits() {
+      try {
+        const edits = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        Object.keys(edits).forEach(key => {
+          const el = document.querySelector(`[data-key="${key}"]`);
+          if (el && edits[key]) el.textContent = edits[key];
+        });
+      } catch (e) { console.warn(e); }
+    }
+
+    function resetToDefaults() {
+      if (!confirm('確定要清除所有自訂文字，恢復為預設範本內容嗎？')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    }
+
+    // 複製表格為圖片 (PNG)
+    async function copyTableAsImage() {
+      showToast('⏳ 正在生成高解析度圖片...');
+      const target = document.getElementById('table-capture-area');
+      try {
+        const canvas = await html2canvas(target, { scale: 2.5, backgroundColor: '#ffffff', useCORS: true });
+        canvas.toBlob(async (blob) => {
+          if (!blob) throw new Error('Blob creation failed');
+          try {
+            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+            showToast('✓ 表格已成功複製為圖片！可於 Word、PPT 或 LINE 貼上');
+          } catch (err) {
+            downloadCanvas(canvas);
+            showToast('✓ 因剪貼簿安全限制，已自動為您下載高畫質 PNG 圖片！');
+          }
+        }, 'image/png');
+      } catch (err) {
+        showToast('複製失敗，請使用「另存圖片」功能');
+      }
+    }
+
+    // 另存圖片
+    async function downloadTableImage() {
+      showToast('⏳ 正在準備下載...');
+      const target = document.getElementById('table-capture-area');
+      try {
+        const canvas = await html2canvas(target, { scale: 2.5, backgroundColor: '#ffffff', useCORS: true });
+        downloadCanvas(canvas);
+        showToast('✓ 表格圖片下載成功！');
+      } catch (err) {
+        showToast('下載失敗，請嘗試使用列印功能存為 PDF');
+      }
+    }
+
+    function downloadCanvas(canvas) {
+      const link = document.createElement('a');
+      link.download = (document.title || 'academic_table').replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_') + '.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    window.addEventListener('DOMContentLoaded', initDoubleTapEdit);
+  </script>
+</body>
+</html>

@@ -14,6 +14,27 @@ AI 需自行辨識結構與內容，**並在無需外部詞庫的情況下，自
 
 ---
 
+## 📁 技能模組與目錄結構 (Skill Modules)
+
+本技能具備完整模組化結構，包含指令、可執行驗證腳本、參考手冊與標準範本資源：
+
+```text
+academic-table-auto-translate/
+├── SKILL.md                              # 核心流程與指令主文件
+├── scripts/                              # 輔助與驗證工具腳本
+│   └── validate_academic_html.py         # 自動檢驗產出 HTML 規範符合度之驗證腳本
+├── references/                           # 詳細學術慣用語與渲染規範指南
+│   ├── taiwan_academic_terminology.md    # 臺灣學術慣用語與大陸簡轉繁防禦指南
+│   ├── canvas_rendering_guide.md         # Canvas 2D 高解析度繪圖引擎實作指南
+│   └── three_line_table_guide.md         # APA 7th / Booktabs 學術三線表格規範
+└── assets/                               # 靜態資源與 HTML 樣板
+    └── templates/                        # 現代化雙語 HTML 範本庫
+        ├── figure_template.html          # 學術模型架構圖範本 (DOM + SVG + Canvas 2D)
+        └── table_template.html           # 學術三線表格範本 (Booktabs + html2canvas)
+```
+
+---
+
 ## 📌 重大除錯經驗與防坑指南（Critical Bug Prevention）
 
 在過往實踐中曾發生重大渲染錯誤，**未來執行時務必嚴格遵守以下防範原則，絕對不可重蹈覆轍**：
@@ -61,18 +82,19 @@ AI 需自行辨識結構與內容，**並在無需外部詞庫的情況下，自
      - 研究/教育：**同儕**（非「同輩/同伴」）、**專案**（非「項目」）、**互動**（非「交互」）、**前測**（非「前置測試」）、**作業/成績**（非「任務/作業」）、**表現/成效**（教育情境非「績效」）。
 3. **上下文語意推導（Contextual Reasoning）**：
    - 當遇到新興科技（如生成式 AI、LLM）、跨領域術語或簡寫時，AI 應結合論文研究主題，自主選擇最通順、最符合臺灣讀者閱讀習慣的學術譯名。
+   - 更多詳細術語對照與原則請參閱：[臺灣學術慣用語對照指南](./references/taiwan_academic_terminology.md)。
 
 ---
 
 ## 支援的內容類型與重繪技術架構
 
-| 類型 | 常見範例 | 最佳 HTML 重繪技術 | 圖片匯出方案 |
-| :--- | :--- | :--- | :--- |
-| **學術表格 (Tables)** | 統計摘要表、ANOVA 檢定表、分群指標表、迴歸分析表 | 語意化 HTML `<table>` + Booktabs 三線表樣式 | `html2canvas` 渲染純表格 DOM（安全無誤） |
-| **模型架構圖 (Model Figures)** | 結構方程模型 (SEM)、路徑分析 (Path Analysis)、因果關係圖 | **HTML DOM 節點卡片 + 底層純 SVG 箭頭線** | **專屬 Canvas 2D 繪圖引擎（100% 防出錯）** |
-| **流程圖與管線圖 (Flowcharts)** | 資料處理流程、實驗步驟、演算法流程、決策樹 | HTML DOM 節點 + SVG 連接線 | 專屬 Canvas 2D 或 DOM 渲染 |
-| **系統架構圖 (Architectures)** | 深度學習模型架構、模組關聯圖、系統平台架構 | CSS Grid/Flexbox 卡片 + SVG 匯流排連線 | 專屬 Canvas 2D 繪圖引擎 |
-| **統計圖表 (Charts)** | 長條圖、折線趨勢圖、散佈圖、箱形圖 | 內嵌 `<svg>` 繪製向量刻度與路徑 | 專屬 Canvas 2D 或高解析 SVG 轉 Canvas |
+| 類型 | 常見範例 | 最佳 HTML 重繪技術 | 圖片匯出方案 | 對應範本與指引 |
+| :--- | :--- | :--- | :--- | :--- |
+| **學術表格 (Tables)** | 統計摘要表、ANOVA 檢定表、分群指標表、迴歸分析表 | 語意化 HTML `<table>` + Booktabs 三線表樣式 | `html2canvas` 渲染純表格 DOM（安全無誤） | [三線表格範本](./assets/templates/table_template.html)<br>[三線表格排版指南](./references/three_line_table_guide.md) |
+| **模型架構圖 (Model Figures)** | 結構方程模型 (SEM)、路徑分析 (Path Analysis)、因果關係圖 | **HTML DOM 節點卡片 + 底層純 SVG 箭頭線** | **專屬 Canvas 2D 繪圖引擎（100% 防出錯）** | [模型架構圖範本](./assets/templates/figure_template.html)<br>[Canvas 繪圖指南](./references/canvas_rendering_guide.md) |
+| **流程圖與管線圖 (Flowcharts)** | 資料處理流程、實驗步驟、演算法流程、決策樹 | HTML DOM 節點 + SVG 連接線 | 專屬 Canvas 2D 或 DOM 渲染 | [模型架構圖範本](./assets/templates/figure_template.html) |
+| **系統架構圖 (Architectures)** | 深度學習模型架構、模組關聯圖、系統平台架構 | CSS Grid/Flexbox 卡片 + SVG 匯流排連線 | 專屬 Canvas 2D 繪圖引擎 | [模型架構圖範本](./assets/templates/figure_template.html) |
+| **統計圖表 (Charts)** | 長條圖、折線趨勢圖、散佈圖、箱形圖 | 內嵌 `<svg>` 繪製向量刻度與路徑 | 專屬 Canvas 2D 或高解析 SVG 轉 Canvas | [Canvas 繪圖指南](./references/canvas_rendering_guide.md) |
 
 ---
 
@@ -348,7 +370,11 @@ function downloadCanvas(canvas) {
 
 ---
 
-## 環境維護原則
+## 環境維護與品質驗證原則
 
-- 每次生成成品 HTML 後，自動檢查工作目錄。
+- 每次生成成品 HTML 後，可執行驗證腳本自動檢查規範符合性：
+  ```bash
+  python .agents/skills/academic-table-auto-translate/scripts/validate_academic_html.py <HTML路徑>
+  ```
+- 腳本詳情與驗證指標請參閱：[HTML 規範驗證工具](./scripts/validate_academic_html.py)。
 - 除了最終產出的 `.html` 成品檔案外，**務必清理所有執行過程中產生的暫存截圖、除錯檔案、測試腳本或中介檔**，保持工作資料夾乾淨整潔。
