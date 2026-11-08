@@ -1,4 +1,4 @@
-# 📊 Chart-Translation-Skill (英文學術圖表自動轉臺灣雙語 HTML 技能)
+# 📊 Chart-Translation-Skill (英文學術圖表自動轉繁體中文 雙語 HTML 技能)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Antigravity Skill](https://img.shields.io/badge/Antigravity-Agent%20Skill-green.svg)](https://github.com/ggdog37/Chart-Translation-Skill)
